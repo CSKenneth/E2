@@ -17,6 +17,8 @@ const diagnostic = document.querySelector<HTMLParagraphElement>(
 )!;
 
 const capacity = 10;
+const shieldEvents = new EventTarget();
+
 let count = 0;
 let panel: HTMLParagraphElement | null = null;
 let panelUpdates = 0;
@@ -62,21 +64,20 @@ function renderStats(snapshot: ShieldSnapshot): void {
     `Shield charge: ${snapshot.currentCharge} · Missing charge: ${snapshot.missingCharge}`;
 }
 
-function refreshViews(): void {
-  const snapshot = getShieldSnapshot();
-
-  drawMeter(snapshot);
-
-  if (panel) {
-    updateStats(snapshot);
-  }
-}
+shieldEvents.addEventListener("shieldchange", () => {
+  drawMeter(getShieldSnapshot());
+});
 
 function setCount(next: number): void {
   const bounded = Math.max(0, Math.min(capacity, next));
   if (bounded === count) return;
   count = bounded;
-  refreshViews();
+
+  shieldEvents.dispatchEvent(new Event("shieldchange"));
+
+  if (panel) {
+    updateStats(getShieldSnapshot());
+  }
 }
 
 document.querySelector<HTMLButtonElement>("#counter-less")!.onclick = () => {
@@ -99,4 +100,5 @@ document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
   panel.remove();
   panel = null;
 };
-refreshViews();
+
+drawMeter(getShieldSnapshot());
