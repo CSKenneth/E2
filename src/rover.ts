@@ -1,5 +1,9 @@
 export {};
 
+type Command = {
+  execute(): void;
+};
+
 const canvas = document.querySelector<HTMLCanvasElement>("#rover-canvas")!;
 const ctx = canvas.getContext("2d")!;
 const readout = document.querySelector<HTMLParagraphElement>("#rover-readout")!;
@@ -8,7 +12,8 @@ let x = 2;
 let y = 2;
 let direction = 0;
 
-function drawRover() {
+// Draw the rover and its current orientation.
+function drawRover(): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = "#718881";
   for (let row = 0; row < 5; row++) {
@@ -32,16 +37,33 @@ function drawRover() {
   }`;
 }
 
-document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
-  if (direction === 0) y = Math.max(0, y - 1);
-  if (direction === 1) x = Math.min(4, x + 1);
-  if (direction === 2) y = Math.min(4, y + 1);
-  if (direction === 3) x = Math.max(0, x - 1);
+// A command that moves the rover forward in its current direction.
+const forwardCommand: Command = {
+  execute(): void {
+    if (direction === 0) y = Math.max(0, y - 1);
+    if (direction === 1) x = Math.min(4, x + 1);
+    if (direction === 2) y = Math.min(4, y + 1);
+    if (direction === 3) x = Math.max(0, x - 1);
+  },
+};
+
+// A command that rotates the rover 90 degrees to the right.
+const rightCommand: Command = {
+  execute(): void {
+    direction = (direction + 1) % 4;
+  },
+};
+
+// The invoker executes commands without choosing their behavior by label.
+function runCommand(command: Command): void {
+  command.execute();
   drawRover();
+}
+document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
+  runCommand(forwardCommand);
 };
 document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
-  direction = (direction + 1) % 4;
-  drawRover();
+  runCommand(rightCommand);
 };
 document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
   x = 2;
